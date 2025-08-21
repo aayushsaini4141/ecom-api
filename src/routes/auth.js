@@ -1,3 +1,10 @@
+
+/**
+ * @swagger
+ * tags:
+ *   name: Auth
+ *   description: User authentication
+ */
 const express = require('express');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
@@ -5,6 +12,32 @@ const { body, validationResult } = require('express-validator');
 const User = require('../models/User');
 const router = express.Router();
 
+/**
+ * @swagger
+ * /auth/signup:
+ *   post:
+ *     summary: User signup
+ *     tags: [Auth]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               email:
+ *                 type: string
+ *               password:
+ *                 type: string
+ *               role:
+ *                 type: string
+ *                 enum: [admin, customer]
+ *     responses:
+ *       200:
+ *         description: User created
+ *       400:
+ *         description: Email already exists or validation error
+ */
 router.post('/signup', [
   body('email').isEmail(),
   body('password').isLength({ min: 6 })
@@ -21,6 +54,29 @@ router.post('/signup', [
   }
 });
 
+/**
+ * @swagger
+ * /auth/login:
+ *   post:
+ *     summary: User login
+ *     tags: [Auth]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               email:
+ *                 type: string
+ *               password:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: JWT token
+ *       401:
+ *         description: Invalid credentials
+ */
 router.post('/login', [
   body('email').isEmail(),
   body('password').exists()

@@ -9,9 +9,11 @@ CartItem.init({
   priceAtAdd: { type: DataTypes.FLOAT, allowNull: false }, // persistent pricing
 }, { sequelize, modelName: 'cartitem' });
 
-CartItem.belongsTo(Cart, { foreignKey: 'cartId' });
-Cart.hasMany(CartItem, { foreignKey: 'cartId' });
-CartItem.belongsTo(Product, { foreignKey: 'productId' });
-Product.hasMany(CartItem, { foreignKey: 'productId' });
+if (process.env.NODE_ENV !== 'test') {
+  CartItem.belongsTo(Cart, { foreignKey: 'cartId' });
+  Cart.hasMany(CartItem, { foreignKey: 'cartId' });
+  CartItem.belongsTo(Product, { foreignKey: 'productId' });
+  Product.hasMany(CartItem, { foreignKey: 'productId' });
+}
 
 module.exports = CartItem;

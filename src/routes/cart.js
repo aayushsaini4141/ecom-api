@@ -1,3 +1,10 @@
+
+/**
+ * @swagger
+ * tags:
+ *   name: Cart
+ *   description: Shopping cart management
+ */
 const express = require('express');
 const { body, validationResult } = require('express-validator');
 const { authenticate, authorize } = require('../middleware/auth');
@@ -7,6 +14,31 @@ const Product = require('../models/Product');
 const router = express.Router();
 
 // Add product to cart
+/**
+ * @swagger
+ * /cart/add:
+ *   post:
+ *     summary: Add product to cart (customer)
+ *     tags: [Cart]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               productId:
+ *                 type: integer
+ *               quantity:
+ *                 type: integer
+ *     responses:
+ *       200:
+ *         description: Product added to cart
+ *       400:
+ *         description: Validation error or product unavailable
+ */
 router.post('/add', authenticate, authorize('customer'), [
   body('productId').isInt(),
   body('quantity').isInt({ min: 1 })
@@ -24,6 +56,18 @@ router.post('/add', authenticate, authorize('customer'), [
 });
 
 // View cart
+/**
+ * @swagger
+ * /cart:
+ *   get:
+ *     summary: View cart (customer)
+ *     tags: [Cart]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Cart items
+ */
 router.get('/', authenticate, authorize('customer'), async (req, res) => {
   let cart = await Cart.findOne({ where: { userId: req.user.id } });
   if (!cart) return res.json({ items: [] });
@@ -32,6 +76,26 @@ router.get('/', authenticate, authorize('customer'), async (req, res) => {
 });
 
 // Remove item from cart
+/**
+ * @swagger
+ * /cart/remove/{itemId}:
+ *   delete:
+ *     summary: Remove item from cart (customer)
+ *     tags: [Cart]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: itemId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: Item removed
+ *       404:
+ *         description: Not found
+ */
 router.delete('/remove/:itemId', authenticate, authorize('customer'), async (req, res) => {
   const item = await CartItem.findByPk(req.params.itemId);
   if (!item) return res.status(404).json({ error: 'Not found' });

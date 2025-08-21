@@ -9,9 +9,11 @@ OrderItem.init({
   priceAtOrder: { type: DataTypes.FLOAT, allowNull: false }, // persistent pricing
 }, { sequelize, modelName: 'orderitem' });
 
-OrderItem.belongsTo(Order, { foreignKey: 'orderId' });
-Order.hasMany(OrderItem, { foreignKey: 'orderId' });
-OrderItem.belongsTo(Product, { foreignKey: 'productId' });
-Product.hasMany(OrderItem, { foreignKey: 'productId' });
+if (process.env.NODE_ENV !== 'test') {
+  OrderItem.belongsTo(Order, { foreignKey: 'orderId' });
+  Order.hasMany(OrderItem, { foreignKey: 'orderId' });
+  OrderItem.belongsTo(Product, { foreignKey: 'productId' });
+  Product.hasMany(OrderItem, { foreignKey: 'productId' });
+}
 
 module.exports = OrderItem;

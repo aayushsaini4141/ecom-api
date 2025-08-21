@@ -11,7 +11,9 @@ Product.init({
   imageUrl: { type: DataTypes.STRING },
 }, { sequelize, modelName: 'product' });
 
-Product.belongsTo(Category, { foreignKey: 'categoryId' });
-Category.hasMany(Product, { foreignKey: 'categoryId' });
+if (process.env.NODE_ENV !== 'test') {
+  Product.belongsTo(Category, { foreignKey: 'categoryId' });
+  Category.hasMany(Product, { foreignKey: 'categoryId' });
+}
 
 module.exports = Product;

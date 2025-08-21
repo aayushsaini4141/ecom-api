@@ -1,3 +1,10 @@
+
+/**
+ * @swagger
+ * tags:
+ *   name: Orders
+ *   description: Order management
+ */
 const express = require('express');
 const { authenticate, authorize } = require('../middleware/auth');
 const Cart = require('../models/Cart');
@@ -8,6 +15,20 @@ const Product = require('../models/Product');
 const router = express.Router();
 
 // Place order
+/**
+ * @swagger
+ * /orders:
+ *   post:
+ *     summary: Place order (customer)
+ *     tags: [Orders]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Order placed
+ *       400:
+ *         description: Cart empty
+ */
 router.post('/', authenticate, authorize('customer'), async (req, res) => {
   let cart = await Cart.findOne({ where: { userId: req.user.id } });
   if (!cart) return res.status(400).json({ error: 'Cart empty' });
@@ -31,12 +52,36 @@ router.post('/', authenticate, authorize('customer'), async (req, res) => {
 });
 
 // View order history
+/**
+ * @swagger
+ * /orders:
+ *   get:
+ *     summary: View order history (customer)
+ *     tags: [Orders]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: List of orders
+ */
 router.get('/', authenticate, authorize('customer'), async (req, res) => {
   const orders = await Order.findAll({ where: { userId: req.user.id }, include: OrderItem });
   res.json(orders);
 });
 
 // Admin: View all orders
+/**
+ * @swagger
+ * /orders/all:
+ *   get:
+ *     summary: View all orders (admin)
+ *     tags: [Orders]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: List of all orders
+ */
 router.get('/all', authenticate, authorize('admin'), async (req, res) => {
   const orders = await Order.findAll({ include: OrderItem });
   res.json(orders);
