@@ -1,19 +1,11 @@
 const express = require('express');
 const { body, validationResult, query } = require('express-validator');
-const multer = require('multer');
-const cloudinary = require('cloudinary').v2;
+const upload = require('../middleware/upload');
 const Product = require('../models/Product');
 const Category = require('../models/Category');
 const { authenticate, authorize } = require('../middleware/auth');
 const router = express.Router();
 
-cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET
-});
-
-const upload = multer({ storage: multer.memoryStorage() });
 
 // Admin: Create product
 router.post('/', authenticate, authorize('admin'), upload.single('image'), [
@@ -22,18 +14,26 @@ router.post('/', authenticate, authorize('admin'), upload.single('image'), [
   body('stock').isInt({ min: 0 }),
   body('categoryId').isInt()
 ], async (req, res) => {
-  const errors = validationResult(req);
-  if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
-  let imageUrl = null;
-  if (req.file) {
-    const result = await cloudinary.uploader.upload_stream({ resource_type: 'image' }, (error, result) => {
-      if (error) return res.status(500).json({ error: 'Image upload failed' });
-      imageUrl = result.secure_url;
-    }).end(req.file.buffer);
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
+    console.log('File received:', req.file);
+    let imageUrl = null;
+    if (req.file) {
+      // Multer-Cloudinary puts the URL in req.file.path, but sometimes in req.file.url
+      imageUrl = req.file.path || req.file.url || null;
+      if (!imageUrl) {
+        console.error('Image upload error: No URL found in req.file', req.file);
+        return res.status(500).json({ error: 'Image upload failed', details: req.file });
+      }
+    }
+    const { name, description, price, stock, categoryId } = req.body;
+    const product = await Product.create({ name, description, price, stock, categoryId, imageUrl });
+    res.json(product);
+  } catch (err) {
+    console.error('Product creation error:', err);
+    res.status(500).json({ error: 'Internal server error', details: err.message });
   }
-  const { name, description, price, stock, categoryId } = req.body;
-  const product = await Product.create({ name, description, price, stock, categoryId, imageUrl });
-  res.json(product);
 });
 
 // Admin: Update product
